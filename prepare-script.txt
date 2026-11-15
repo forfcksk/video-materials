@@ -1,0 +1,80 @@
+sudo apt install -y \
+    qemu-system-x86 \
+    libvirt-daemon-system \
+    libvirt-clients \
+    virtinst \
+    cpu-checker
+
+virsh -c qemu:///system pool-define-as default dir \
+    --target /var/lib/libvirt/images
+
+virsh -c qemu:///system pool-build default
+virsh -c qemu:///system pool-start default
+virsh -c qemu:///system pool-autostart default
+
+cat > /tmp/lab-net.xml <<'EOF'
+<network>
+  <name>lab-net</name>
+  <forward mode='nat'/>
+  <bridge name='virbr1' stp='on' delay='0'/>
+  <ip address='192.168.123.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.123.100' end='192.168.123.200'/>
+    </dhcp>
+  </ip>
+</network>
+EOF
+
+virsh -c qemu:///system net-define /tmp/lab-net.xml
+virsh -c qemu:///system net-start lab-net
+virsh -c qemu:///system net-autostart lab-net
+
+ssh -t root@10.13.13.15 'virsh edit k8s-worker3'
+
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x01' slot='0x00' function='0x0'/>
+      </source>
+    </hostdev>
+
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x01' slot='0x00' function='0x1'/>
+      </source>
+    </hostdev>
+
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x01' slot='0x00' function='0x2'/>
+      </source>
+    </hostdev>
+
+    <hostdev mode='subsystem' type='pci' managed='yes'>
+      <driver name='vfio'/>
+      <source>
+        <address domain='0x0000' bus='0x01' slot='0x00' function='0x3'/>
+      </source>
+    </hostdev>
+
+
+ssh root@192.168.122.42 '
+echo "===== KUBERNETES VERSION ====="
+kubeadm version -o short
+
+echo
+echo "===== EXISTING NODES ====="
+kubectl get nodes -o wide
+
+echo
+echo "===== JOIN COMMAND ====="
+kubeadm token create --print-join-command
+'
+
+virsh start k8s-worker3
+virsh start k8s-worker4
+
+virsh list --all
+virsh net-dhcp-leases lab-net
