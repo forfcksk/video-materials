@@ -60,6 +60,10 @@ resource "libvirt_domain" "vm" {
   memory = var.memory * 1024
   vcpu   = var.vcpu
 
+  cpu = {
+    mode = "host-passthrough"
+  }
+
   os = {
     type      = "hvm"
     type_arch = "x86_64"
@@ -182,10 +186,14 @@ resource "libvirt_volume" "worker4_cloudinit" {
 }
 
 resource "libvirt_domain" "worker4_vm" {
-  name      = "k8s-worker4"
-  type      = "kvm"
-  memory    = 4096 * 1024
-  vcpu      = 2
+  name   = "k8s-worker4"
+  type   = "kvm"
+  memory = 4096 * 1024
+  vcpu   = 2
+
+  cpu = {
+    mode = "host-passthrough"
+  }
   autostart = true
 
   os = {
