@@ -154,7 +154,7 @@ terraform destroy
 
 Практический процесс развёртывания и подключения Worker-нод показан в видео.
 
-[\[Rutube — ссылка будет добавлена\]](https://rutube.ru/video/1f8e34508a8cfd5e82cd7f6c671d2d70/)
+[\[Rutube\]](https://rutube.ru/video/1f8e34508a8cfd5e82cd7f6c671d2d70/)
 
 ## Примечание
 
